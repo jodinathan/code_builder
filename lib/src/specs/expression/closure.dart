@@ -21,12 +21,57 @@ Expression toGenericClosure(Method method) {
   return ClosureExpression._(withoutReturnType);
 }
 
-class ClosureExpression extends Expression {
+ClosureExpression toFullClosure(Method method) => ClosureExpression._(method);
+
+class ClosureExpression extends Expression implements Reference {
   final Method method;
 
-  const ClosureExpression._(this.method);
+  ClosureExpression._(this.method);
+
+  @override
+  String? get url => null;
+
+  @override
+  String? get symbol => null;
+
+  @override
+  Reference get type => this;
 
   @override
   R accept<R>(ExpressionVisitor<R> visitor, [R? context]) =>
       visitor.visitClosureExpression(this, context);
+
+  @override
+  Expression newInstance(
+    Iterable<Expression> positionalArguments, [
+    Map<String, Expression> namedArguments = const {},
+    List<Reference> typeArguments = const [],
+  ]) =>
+      throw UnsupportedError('Cannot instantiate a record type.');
+
+  @override
+  Expression newInstanceNamed(
+    String name,
+    Iterable<Expression> positionalArguments, [
+    Map<String, Expression> namedArguments = const {},
+    List<Reference> typeArguments = const [],
+  ]) =>
+      throw UnsupportedError('Cannot instantiate a record type.');
+
+  @override
+  Expression constInstance(
+    Iterable<Expression> positionalArguments, [
+    Map<String, Expression> namedArguments = const {},
+    List<Reference> typeArguments = const [],
+  ]) =>
+      throw UnsupportedError('Cannot "const" a record type.');
+
+  @override
+  Expression constInstanceNamed(
+    String name,
+    Iterable<Expression> positionalArguments, [
+    Map<String, Expression> namedArguments = const {},
+    List<Reference> typeArguments = const [],
+  ]) =>
+      throw UnsupportedError('Cannot "const" a record type.');
 }

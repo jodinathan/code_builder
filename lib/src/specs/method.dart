@@ -10,6 +10,7 @@ import '../base.dart';
 import '../mixins/annotations.dart';
 import '../mixins/dartdoc.dart';
 import '../mixins/generics.dart';
+import '../mixins/parameterized.dart';
 import '../visitors.dart';
 import 'code.dart';
 import 'expression.dart';
@@ -21,7 +22,7 @@ const _$void = Reference('void');
 
 @immutable
 abstract class Method extends Object
-    with HasAnnotations, HasGenerics, HasDartDocs
+    with HasAnnotations, HasGenerics, HasDartDocs, HasParameters
     implements Built<Method, MethodBuilder>, Spec {
   factory Method([void Function(MethodBuilder) updates]) = _$Method;
 
@@ -44,10 +45,10 @@ abstract class Method extends Object
   @override
   BuiltList<Reference> get types;
 
-  /// Optional parameters.
+  @override
   BuiltList<Parameter> get optionalParameters;
 
-  /// Required parameters.
+  @override
   BuiltList<Parameter> get requiredParameters;
 
   /// Body of the method.
@@ -91,10 +92,17 @@ abstract class Method extends Object
 
   /// This method as a (possibly) generic closure.
   Expression get genericClosure => toGenericClosure(this);
+
+  /// This method as a full closure.
+  ClosureExpression get express => toFullClosure(this);
 }
 
 abstract class MethodBuilder extends Object
-    with HasAnnotationsBuilder, HasGenericsBuilder, HasDartDocsBuilder
+    with
+        HasAnnotationsBuilder,
+        HasGenericsBuilder,
+        HasDartDocsBuilder,
+        HasParametersBuilder
     implements Builder<Method, MethodBuilder> {
   factory MethodBuilder() = _$MethodBuilder;
 
@@ -114,10 +122,10 @@ abstract class MethodBuilder extends Object
   @override
   ListBuilder<Reference> types = ListBuilder<Reference>();
 
-  /// Optional parameters.
+  @override
   ListBuilder<Parameter> optionalParameters = ListBuilder<Parameter>();
 
-  /// Required parameters.
+  @override
   ListBuilder<Parameter> requiredParameters = ListBuilder<Parameter>();
 
   /// Body of the method.

@@ -4,6 +4,7 @@
 
 import 'allocator.dart';
 import 'base.dart';
+import 'mixins/parameterized.dart';
 import 'specs/class.dart';
 import 'specs/code.dart';
 import 'specs/constructor.dart';
@@ -15,6 +16,7 @@ import 'specs/field.dart';
 import 'specs/library.dart';
 import 'specs/method.dart';
 import 'specs/mixin.dart';
+import 'specs/record.dart';
 import 'specs/reference.dart';
 import 'specs/type_function.dart';
 import 'specs/type_reference.dart';
@@ -361,6 +363,9 @@ class DartEmitter extends Object
     for (var a in spec.annotations) {
       visitAnnotation(a, output);
     }
+    if (spec.external) {
+      output.write('external ');
+    }
     if (spec.static) {
       output.write('static ');
     }
@@ -550,6 +555,44 @@ class DartEmitter extends Object
     return out;
   }
 
+  void _visitParameters(HasParameters spec, StringSink output) {
+    final hasMultipleParameters =
+        spec.requiredParameters.length + spec.optionalParameters.length > 1;
+    if (spec.requiredParameters.isNotEmpty) {
+      var count = 0;
+      for (final p in spec.requiredParameters) {
+        count++;
+        _visitParameter(p, output);
+        if (hasMultipleParameters ||
+            spec.requiredParameters.length != count ||
+            spec.optionalParameters.isNotEmpty) {
+          output.write(', ');
+        }
+      }
+    }
+    if (spec.optionalParameters.isNotEmpty) {
+      final named = spec.optionalParameters.any((p) => p.named);
+      if (named) {
+        output.write('{');
+      } else {
+        output.write('[');
+      }
+      var count = 0;
+      for (final p in spec.optionalParameters) {
+        count++;
+        _visitParameter(p, output, optional: true, named: named);
+        if (hasMultipleParameters || spec.optionalParameters.length != count) {
+          output.write(', ');
+        }
+      }
+      if (named) {
+        output.write('}');
+      } else {
+        output.write(']');
+      }
+    }
+  }
+
   @override
   StringSink visitMethod(Method spec, [StringSink? output]) {
     output ??= StringBuffer();
@@ -580,42 +623,7 @@ class DartEmitter extends Object
       }
       visitTypeParameters(spec.types.map((r) => r.type), output);
       output.write('(');
-      final hasMultipleParameters =
-          spec.requiredParameters.length + spec.optionalParameters.length > 1;
-      if (spec.requiredParameters.isNotEmpty) {
-        var count = 0;
-        for (final p in spec.requiredParameters) {
-          count++;
-          _visitParameter(p, output);
-          if (hasMultipleParameters ||
-              spec.requiredParameters.length != count ||
-              spec.optionalParameters.isNotEmpty) {
-            output.write(', ');
-          }
-        }
-      }
-      if (spec.optionalParameters.isNotEmpty) {
-        final named = spec.optionalParameters.any((p) => p.named);
-        if (named) {
-          output.write('{');
-        } else {
-          output.write('[');
-        }
-        var count = 0;
-        for (final p in spec.optionalParameters) {
-          count++;
-          _visitParameter(p, output, optional: true, named: named);
-          if (hasMultipleParameters ||
-              spec.optionalParameters.length != count) {
-            output.write(', ');
-          }
-        }
-        if (named) {
-          output.write('}');
-        } else {
-          output.write(']');
-        }
-      }
+      _visitParameters(spec, output);
       output.write(')');
     }
     if (spec.body != null) {
@@ -641,10 +649,53 @@ class DartEmitter extends Object
       if (!_isLambdaMethod(spec)) {
         output.write(' } ');
       }
-    } else {
+    } else if (_isLambdaMethod(spec)) {
       output.write(';');
     }
     return output;
+  }
+
+  @override
+  StringSink visitRecordType(RecordType spec, [StringSink? output]) {
+    final out = output ??= StringBuffer();
+
+    visitTypeParameters(spec.types.map((r) => r.type), out);
+    
+    out.write('(');
+
+    final needsTrailingComma =
+        spec.parameters.length + spec.namedParameters.length > 1;
+
+    visitAll<Reference>(spec.parameters, out, (spec) {
+      spec.accept(this, out);
+    });
+    final hasNamedParameters = spec.namedParameters.isNotEmpty;
+
+    if (spec.parameters.isNotEmpty && needsTrailingComma) {
+      out.write(', ');
+    }
+
+    if (hasNamedParameters) {
+      out.write('{');
+      visitAll<String>(spec.namedParameters.keys, out, (name) {
+        spec.namedParameters[name]!.accept(this, out);
+        out
+          ..write(' ')
+          ..write(name);
+      });
+      if (needsTrailingComma) {
+        out.write(', ');
+      }
+      out.write('}');
+    }
+
+    out.write(')');
+
+    if (_useNullSafetySyntax && (spec.isNullable ?? false)) {
+      out.write('?');
+    }
+
+    return out;
   }
 
   // Expose as a first-class visit function only if needed.

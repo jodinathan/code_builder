@@ -15,6 +15,7 @@ import 'specs/field.dart';
 import 'specs/library.dart';
 import 'specs/method.dart';
 import 'specs/mixin.dart';
+import 'specs/record.dart';
 import 'specs/reference.dart';
 import 'specs/type_function.dart';
 import 'specs/type_reference.dart';
@@ -45,6 +46,8 @@ abstract class SpecVisitor<T> {
   T visitFunctionType(FunctionType spec, [T? context]);
 
   T visitTypeDef(TypeDef spec, [T? context]);
+
+  T visitRecordType(RecordType spec, [T? context]);
 
   T visitMethod(Method spec, [T? context]);
 

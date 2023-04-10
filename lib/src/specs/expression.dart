@@ -379,7 +379,7 @@ Expression _late(bool late, Expression expression) => late
     : expression;
 
 /// Creates `typedef {name} =`.
-Code createTypeDef(String name, FunctionType type) => BinaryExpression._(
+Code createTypeDef(String name, Expression type) => BinaryExpression._(
         LiteralExpression._('typedef $name'), type.expression, '=')
     .statement;
 

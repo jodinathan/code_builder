@@ -54,6 +54,7 @@ export 'src/specs/method.dart'
         Parameter,
         ParameterBuilder;
 export 'src/specs/mixin.dart' show Mixin, MixinBuilder;
+export 'src/specs/record.dart' show RecordType, RecordTypeBuilder;
 export 'src/specs/reference.dart' show refer, Reference;
 export 'src/specs/type_function.dart' show FunctionType, FunctionTypeBuilder;
 export 'src/specs/type_reference.dart' show TypeReference, TypeReferenceBuilder;
