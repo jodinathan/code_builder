@@ -12,7 +12,6 @@ import '../visitors.dart';
 import 'code.dart';
 import 'method.dart';
 import 'reference.dart';
-import 'type_function.dart';
 
 part 'expression/binary.dart';
 part 'expression/closure.dart';
@@ -69,7 +68,7 @@ abstract class Expression implements Spec {
   /// Returns the result of `this` `as` [other].
   Expression asA(Expression other) =>
       ParenthesizedExpression._(BinaryExpression._(
-        expression,
+        ParenthesizedExpression._(expression),
         other,
         'as',
       ));
